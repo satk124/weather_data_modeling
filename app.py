@@ -90,8 +90,14 @@ def store_single_table(metric, data):
         #print metric, "inserting.......", data 
         for row in data:
             MaxTemp.insert(month=row["month"], year=row["year"], value=row["val"], country=row["country"]).execute()
-
-
+    if metric == "Tmin":
+        pass
+    if metric == "Tmean":
+        pass
+    if metric == "Sunshine":
+        pass
+    if metric == "Rainfall":
+        pass
 @app.route('/storeAll', methods=['GET'])
 def store():
     import pdb
