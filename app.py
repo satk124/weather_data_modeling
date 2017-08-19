@@ -2,7 +2,7 @@
 
 import sys
 import requests
-from flask import Flask, g, jsonify
+from flask import Flask, g, jsonify, render_template
 from peewee import *
 from peewee import MySQLDatabase
 app = Flask(__name__)
@@ -130,6 +130,6 @@ def create_tables():
 #    return True 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    return render_template("index.html")
 
 #app.run(port = 8888, debug=Truesseu)
