@@ -84,29 +84,13 @@ def store_to_tables(url_offset, countries, metrics):
                             data_source[unique_set] = {"month":month, metrics[metric]:val, "year":year, "country":country}
                         else :
                             data_source[unique_set][metrics[metric]] = val
-                    #raw_input("-----------")
-                    #print data_formanted
-    store_single_table(metric, data_source)
+        store_data_in_table(metric, data_source)
     print 1
             #print metric, "data:", metric_data.text
 
-def store_single_table(metric, data):
-    if metric == "Tmax":
-        #raw_input("**********************************************************")
-        #print metric, "inserting.......", data 
-        for row in data:
-            MaxTemp.insert(month=row["month"], year=row["year"], value=row["val"], country=row["country"]).execute()
-    if metric == "Tmin":
-        pass
-    if metric == "Tmean":
-        pass
-    if metric == "Sunshine":
-        pass
-    if metric == "Rainfall":
-        pass
 
 ''' this will store data into db with 100 rows each time'''
-def store_single_table(metric, data_source):
+def store_data_in_table(metric, data_source):
         data = list(data_source.values())
         with database.atomic():
             for idx in range(0, len(data), 100):
