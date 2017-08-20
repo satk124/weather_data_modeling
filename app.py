@@ -6,8 +6,9 @@ from flask import Flask, g, jsonify, render_template
 from peewee import *
 from peewee import MySQLDatabase
 app = Flask(__name__)
-database = MySQLDatabase("weather", host="localhost", user="root", password="root")
+database = MySQLDatabase("weather", host="localhost", user="root", password="sat")
 
+month_rev_map = {"JAN":0, "FEB":1, "MAR":2, "APR":3, "MAY":4, "JUN":5, "JUL":6, "AUG":7, "SEP":8, "OCT":9, "NOV":10, "DEC":11, "WIN":12, "SPR":13, "SUM":14, "AUT":15, "ANN":16}
 countries = ["UK", "England", "Wales", "Scotland"]
 metrics = {"Tmax":"temp_max", "Tmin":"temp_min", "Tmean":"temp_mean", "Sunshine":"sunshine", "Rainfall":"rainfall"}
 @app.before_request
@@ -28,35 +29,55 @@ def after_request(response):
 #display api
 @app.route('/monthwisedata/<string:year>', methods = ["GET"])
 def monthwise(year):
-    res = {}
+    res = {v:{} for k, v in metrics.iteritems()}
     #res = {"metric":[{"country", [16 vals]}]}
-    metrics = ["Tmax"]
-    for metric in metrics.keys():
-        all_countries = {}
-        for country in countries:
-            q =   WeatherData.select().where((WeatherData.year == year) & (WeatherData.country == country))
-            print q
-            country_data =  q.execute() 
-            country_data_formated = []
-            for v in country_data:
-                print v.month, v.year, v.country
-                country_data_formated.append({v.month:v.value})
-            print country_data_formated
-            all_countries.update({country: country_data_formated})
-        res.update({metric:all_countries})
-            #res[metric].append({country:values}) 
+    all_countries = {}
+    q =   WeatherData.select().where(WeatherData.year == year)
+    country_data =  q.execute() 
+    country_data_formated = []
+    for v in country_data:
+        if v.country in res["temp_min"]:
+            res["temp_min"][v.country][month_rev_map[v.month]]=v.temp_min
+        else:
+            l = [0]*17
+            l[month_rev_map[v.month]]=v.temp_min
+            res["temp_min"].update({v.country : l})
+        
+        if v.country in res["temp_max"]:
+            res["temp_max"][v.country][month_rev_map[v.month]]=v.temp_min
+        else:
+            l = [0]*17
+            l[month_rev_map[v.month]]=v.temp_min
+            res["temp_max"].update({v.country : l})
+        if v.country in res["temp_mean"]:
+            res["temp_mean"][v.country][month_rev_map[v.month]]=v.temp_min
+        else:
+            l = [0]*17
+            l[month_rev_map[v.month]]=v.temp_min
+            res["temp_mean"].update({v.country : l})
+        if v.country in res["sunshine"]:
+            res["sunshine"][v.country][month_rev_map[v.month]]=v.temp_min
+        else:
+            l = [0]*17
+            l[month_rev_map[v.month]]=v.temp_min
+            res["sunshine"].update({v.country : l})
+        if v.country in res["rainfall"]:
+            res["rainfall"][v.country][month_rev_map[v.month]]=v.temp_min
+        else:
+            l = [0]*17
+            l[month_rev_map[v.month]]=v.temp_min
+            res["rainfall"].update({v.country : l})
     return jsonify(res)
 
-#@app.route('/min_temp')
-#def min_temp():
-#
-#
-#@app.route('/sunshine')
-#
-#@app.route('/rainfall')
+@app.route('/getyears', methods = ["GET"])
+def get_years():
+    q =   WeatherData.select(WeatherData.year).distinct()
+    years = q.execute()
+    years =  [y.year for y in years]
+    return jsonify({"years":years})
+
 
 #store api
-
 '''fetch data from apis for all countries defined in "countries" list and store them in a dict "data_source"'''
 def store_to_tables(url_offset, countries, metrics):
     month_map = {1:"JAN", 2:"FEB", 3:"MAR", 4:"APR", 5:"MAY", 6:"JUN", 7:"JUL", 8:"AUG", 9:"SEP", 10:"OCT", 11:"NOV", 12:"DEC", 13:"WIN", 14:"SPR", 15:"SUM", 16:"AUT", 17:"ANN"}
@@ -84,9 +105,7 @@ def store_to_tables(url_offset, countries, metrics):
                             data_source[unique_set] = {"month":month, metrics[metric]:val, "year":year, "country":country}
                         else :
                             data_source[unique_set][metrics[metric]] = val
-        store_data_in_table(metric, data_source)
-    print 1
-            #print metric, "data:", metric_data.text
+    store_data_in_table(metric, data_source)
 
 
 ''' this will store data into db with 100 rows each time'''
@@ -100,13 +119,11 @@ def store_data_in_table(metric, data_source):
 @app.route('/storeAll', methods=['GET'])
 def store():
     url_offset = "http://www.metoffice.gov.uk/pub/data/weather/uk/climate/datasets/"
-
     store_to_tables(url_offset, countries, metrics)
     #countries = get_countries()
     return jsonify({})
 
-#model
-
+#data model
 class BaseModel(Model):
     class Meta:
         database = database
@@ -128,10 +145,7 @@ class WeatherData(BaseModel):
         indexes = (
             (("month","year","country"), True),
         )
-
-
-
-
+#one time create table
 def create_tables():
     database.connect()
     database.create_tables([WeatherData])
