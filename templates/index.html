@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="weather" style="overflow-x:hidden">
+   <head>
+      <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+      <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.min.css" />
+      <script src="//code.jquery.com/jquery-1.12.3.min.js"></script>
+      <script src="/static/Chart.js"></script>
+      <script src="/static/angular-chart.min.js"></script>
+      <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+      <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+      <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-sanitize.js"></script>
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.min.js"></script>
+      <script src="/static/main.js"></script>
+      <style type="text/css">
+         .form-inline .ui-select-container .ui-select-toggle,
+         .form-inline .ui-select-container .ui-select-search {
+         width: 100%;
+         }
+         .mytextdiv{
+         display:flex;
+         flex-direction:row;
+         align-items: center;
+         }
+         .mytexttitle{
+         flex-grow:0;
+         }
+         .divider{
+         flex-grow:1;
+         height: 1px;
+         background-color: #9f9f9f;
+         }
+      </style>
+   </head>
+   {% raw %}
+   <body >
+      <div style="text-align: center;">
+      <h4>Weather Data Explorer</h4>
+      <div ng-controller="weatherCtrl">
+         <form class="form-inline">
+            <div class="form-group">
+               <label for="select_year"> Select Year:</label>
+               <ui-select  id="select_year" theme="bootstrap" ng-required="true" ng-model="s.year" style="width: 200px" ng-change="populate_data()">
+                  <ui-select-match placeholder="select year">{{$select.selected}}</ui-select-match>
+                  <ui-select-choices repeat="year in years | filter: $select.search">
+                     <div ng-bind="year | highlight: $select.search" ></div>
+                  </ui-select-choices>
+               </ui-select>
+            </div>
+         </form>
+         <br/>
+         Data for Year - {{s.year}}
+         <div class="col-md-12 col-sm-12">
+            <div class="col-md-9 col-sm-9" >
+            </div>
+            <div class="col-md-3 col-sm-3">
+               <div class="row">
+                  <div class="mytextdiv col-md-12 col-sm-12">
+                     <div class="mytexttitle col-md-3 col-sm-3">
+                        UK
+                     </div>
+                     <div class="divider col-md-9 col-sm-9"  style="border: 1px solid rgb(255,51,51)"></div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="mytextdiv col-md-12 col-sm-12">
+                     <div class="mytexttitle col-md-3 col-sm-3">
+                        England
+                     </div>
+                     <div class="divider col-md-9 col-sm-9"  style="border: 1px solid rgb(51,153,255);"></div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="mytextdiv col-md-12 col-sm-12">
+                     <div class="mytexttitle col-md-3 col-sm-3">
+                        Scotland
+                     </div>
+                     <div class="divider col-md-9 col-sm-9"  style="border: 1px solid rgb(51,51,255);"></div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="mytextdiv col-md-12 col-sm-12">
+                     <div class="mytexttitle col-md-3 col-sm-3">
+                        Wales
+                     </div>
+                     <div class="divider col-md-9 col-sm-9" style="border: 1px solid rgb(96,96,96);"></div>
+                  </div>
+               </div>
+            </div>
+            <div class="col-md-12 col-sm-12" style="padding: 20px 40px 20px 20px;">
+               <div  ng-class="{'col-md-6 col-sm-6': metric != 'rainfall',  'col-md-12 col-sm-12': metric == 'rainfall'}"  style="padding: 20px 20px 20px 20px;" ng-repeat="(metric, data) in metrics_data" >
+                  <div class="col-md-3 col-sm-3" ng-show="metric!=rainfall">
+                  </div>
+                  <div ng-class="{'col-md-12 col-sm-12': metric != 'rainfall',  'col-md-6 col-sm-6': metric == 'rainfall'}">
+                     <label>{{title_map[metric]}}</label>
+                     <canvas id="line" class="chart chart-line" chart-data="data" chart-labels="labels" chart-series="series" chart-options="options" chart-dataset-override="datasetOverride" chart-click="onClick" chart-colors="colours">
+                     </canvas>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </body>
+   {% endraw %}
+</html>
