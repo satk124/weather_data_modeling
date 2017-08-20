@@ -2,7 +2,7 @@
 Display yearly weather data
 developed using Flask, Angular, MySql, Peewee
 steps to run
-1. run requirement.sh
+1. pip install -r requirements.txt
 2. create database weather
 3. python create_table.py
 
