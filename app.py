@@ -20,9 +20,6 @@ def before_request():
 @app.after_request
 def after_request(response):
     g.db.close()
-    response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
     return response
 
 
@@ -44,28 +41,28 @@ def monthwise(year):
             res["temp_min"].update({v.country : l})
         
         if v.country in res["temp_max"]:
-            res["temp_max"][v.country][month_rev_map[v.month]]=v.temp_min
+            res["temp_max"][v.country][month_rev_map[v.month]]=v.temp_max
         else:
             l = [0]*17
-            l[month_rev_map[v.month]]=v.temp_min
+            l[month_rev_map[v.month]]=v.temp_max
             res["temp_max"].update({v.country : l})
         if v.country in res["temp_mean"]:
-            res["temp_mean"][v.country][month_rev_map[v.month]]=v.temp_min
+            res["temp_mean"][v.country][month_rev_map[v.month]]=v.temp_mean
         else:
             l = [0]*17
-            l[month_rev_map[v.month]]=v.temp_min
+            l[month_rev_map[v.month]]=v.temp_mean
             res["temp_mean"].update({v.country : l})
         if v.country in res["sunshine"]:
-            res["sunshine"][v.country][month_rev_map[v.month]]=v.temp_min
+            res["sunshine"][v.country][month_rev_map[v.month]]=v.sunshine
         else:
             l = [0]*17
-            l[month_rev_map[v.month]]=v.temp_min
+            l[month_rev_map[v.month]]=v.sunshine
             res["sunshine"].update({v.country : l})
         if v.country in res["rainfall"]:
-            res["rainfall"][v.country][month_rev_map[v.month]]=v.temp_min
+            res["rainfall"][v.country][month_rev_map[v.month]]=v.rainfall
         else:
             l = [0]*17
-            l[month_rev_map[v.month]]=v.temp_min
+            l[month_rev_map[v.month]]=v.rainfall
             res["rainfall"].update({v.country : l})
     return jsonify(res)
 
@@ -77,7 +74,7 @@ def get_years():
     return jsonify({"years":years})
 
 
-#store api
+#store apis
 '''fetch data from apis for all countries defined in "countries" list and store them in a dict "data_source"'''
 def store_to_tables(url_offset, countries, metrics):
     month_map = {1:"JAN", 2:"FEB", 3:"MAR", 4:"APR", 5:"MAY", 6:"JUN", 7:"JUL", 8:"AUG", 9:"SEP", 10:"OCT", 11:"NOV", 12:"DEC", 13:"WIN", 14:"SPR", 15:"SUM", 16:"AUT", 17:"ANN"}
@@ -112,24 +109,24 @@ def store_to_tables(url_offset, countries, metrics):
 def store_data_in_table(metric, data_source):
         data = list(data_source.values())
         with database.atomic():
-            for idx in range(0, len(data), 100):
-                WeatherData.insert_many(data[idx:idx + 100]).execute()
-
+            for row in data:
+                try:
+                    WeatherData.insert(row).execute()
+                except IntegrityError:
+                    pass
 
 @app.route('/storeAll', methods=['GET'])
 def store():
     url_offset = "http://www.metoffice.gov.uk/pub/data/weather/uk/climate/datasets/"
     store_to_tables(url_offset, countries, metrics)
-    #countries = get_countries()
-    return jsonify({})
+    return jsonify({"status":"success"})
 
 #data model
 class BaseModel(Model):
     class Meta:
         database = database
 
-# the user model specifies its fields (or columns)
-
+#  model specifies its fields (or columns)
 '''Model to Store data '''
 class WeatherData(BaseModel):
     month = CharField()
@@ -150,10 +147,7 @@ def create_tables():
     database.connect()
     database.create_tables([WeatherData])
 
-#def store_single_table(table, data):
-#    return True 
 @app.route('/')
 def hello_world():
     return render_template("index.html")
 
-#app.run(port = 8888, debug=Truesseu)
